@@ -28,6 +28,9 @@ spec:
       labels:
         app: passport
     spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
       imagePullSecrets:
         - name: ghcr
       containers:
