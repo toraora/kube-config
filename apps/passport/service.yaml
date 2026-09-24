@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: passport
+spec:
+  selector:
+    app: passport
+  ports:
+    - port: 80
+      targetPort: http
+      name: http

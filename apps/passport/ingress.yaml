@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: passport
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 16m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [PASSPORT_HOST]
+      secretName: passport-tls
+  rules:
+    - host: PASSPORT_HOST
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: passport
+                port:
+                  name: http

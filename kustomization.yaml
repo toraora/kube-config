@@ -7,4 +7,4 @@ labels:
     includeSelectors: false
 resources:
   - base
-  # - apps/<name>
+  - apps/passport
