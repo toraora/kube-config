@@ -1,14 +1,16 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: letsencrypt-http
+  name: letsencrypt-dns
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: imanasianninja@gmail.com
     privateKeySecretRef:
-      name: letsencrypt-http-account
+      name: letsencrypt-dns-account
     solvers:
-      - http01:
-          ingress:
-            ingressClassName: nginx
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-dns-token
+              key: token
