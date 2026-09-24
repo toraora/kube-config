@@ -28,6 +28,10 @@ spec:
       labels:
         app: passport
     spec:
+      # Image runs as node (uid 1000); make the uploads PVC writable by it.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
       imagePullSecrets:
         - name: ghcr
       containers:
