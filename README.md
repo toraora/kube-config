@@ -13,16 +13,16 @@ kustomization.yaml  # root: aggregates base + apps
 ## Workflow
 
 1. Edit or add manifests under `apps/<name>/` and register the directory in the root `kustomization.yaml`.
-2. Open a PR — CI runs `kubectl kustomize` + `kubectl diff` against the cluster.
-3. Merge to `main` — CI runs `kubectl apply -k . --prune -l app.kubernetes.io/managed-by=kube-config`.
+2. `kubectl diff -k .` to review, then `kubectl apply -k . --prune -l app.kubernetes.io/managed-by=kube-config`.
+3. Commit and push so `main` always reflects what is running.
+
+Deploys are run manually (by Devin) from a checkout of `main`; there is no CI.
 
 ## Access
 
 The service account `toraora-admin` is namespace-scoped to `toraora`. It can manage workloads,
 services, ingresses, cert-manager `Certificate`/`Issuer`, RabbitMQ CRs, PVCs, and secrets, but
 cannot read cluster-scoped resources (nodes, ingressclasses, clusterissuers, storageclasses).
-
-CI authenticates with the `KUBECONFIG_B64` repository secret (base64 of the kubeconfig).
 
 ## Local
 
