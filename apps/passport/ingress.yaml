@@ -8,10 +8,10 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts: [PASSPORT_HOST]
+    - hosts: [passport.sfbanorcalarml.org]
       secretName: passport-tls
   rules:
-    - host: PASSPORT_HOST
+    - host: passport.sfbanorcalarml.org
       http:
         paths:
           - path: /

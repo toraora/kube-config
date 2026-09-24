@@ -35,7 +35,7 @@ spec:
               name: http
           env:
             - name: PUBLIC_URL
-              value: https://PASSPORT_HOST
+              value: https://passport.sfbanorcalarml.org
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
