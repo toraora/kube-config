@@ -11,4 +11,6 @@ Out-of-band secrets (never committed):
 - `passport-env` — `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_GUILD_ID`, `DISCORD_BOT_TOKEN`,
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`, `ADMIN_DISCORD_IDS`
 
+Uploads live on the RWX `cephfs-nvme-retain` PVC `passport-uploads-rwx`, enabling rolling updates.
+
 Redeploy latest image: `kubectl rollout restart deploy/passport -n toraora`.
