@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webview
+  template:
+    metadata:
+      labels:
+        app: webview
+    spec:
+      securityContext:
+        fsGroup: 1000
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: webview
+          image: ghcr.io/atomicgrader/webview:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3100
+              name: http
+          envFrom:
+            - secretRef:
+                name: webview
+            - configMapRef:
+                name: webview
+          volumeMounts:
+            - name: contest-repo
+              mountPath: /app/repo
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              memory: 4Gi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+      volumes:
+        - name: contest-repo
+          emptyDir: {}

@@ -8,3 +8,4 @@ labels:
 resources:
   - base
   - apps/passport
+  - apps/webview

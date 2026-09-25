@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webview
+data:
+  GIT_REPO_URL: https://github.com/jhmt-pw/jhmt-2027.git
+  GIT_PUSH: "1"
+  # Discord login is enabled only when all of these plus the
+  # DISCORD_CLIENT_SECRET / DISCORD_BOT_TOKEN secrets are set.
+  DISCORD_CLIENT_ID: "1532242888858144848"
+  DISCORD_GUILD_ID: "1372976637972320406"
+  DISCORD_REQUIRED_ROLE_IDS: "1550663009515479090"
+  DISCORD_REDIRECT_URI: https://jhmt.poketwo.io/api/auth/discord/callback
