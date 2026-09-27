@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: the-commons
+  annotations:
+    cert-manager.io/issuer: letsencrypt-dns
+    # Long-lived game WebSockets: don't let nginx close idle connections at its 60s default.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [commons.sfbanorcalarml.org]
+      secretName: the-commons-tls
+  rules:
+    - host: commons.sfbanorcalarml.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: the-commons
+                port:
+                  name: http

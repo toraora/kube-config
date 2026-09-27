@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-commons
+spec:
+  # Rooms live in process memory: exactly one pod, replaced (not overlapped) on rollout.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: the-commons
+  template:
+    metadata:
+      labels:
+        app: the-commons
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: the-commons
+          image: ghcr.io/casa-de-dos-gatos/the-commons:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
