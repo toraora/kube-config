@@ -21,6 +21,8 @@ spec:
         - name: the-commons
           image: ghcr.io/casa-de-dos-gatos/the-commons:latest
           imagePullPolicy: Always
+          # The image's CMD binds 0.0.0.0; the cluster is IPv6-only, so bind ::.
+          command: ["uvicorn", "app.main:app", "--host", "::", "--port", "8080"]
           ports:
             - containerPort: 8080
               name: http
