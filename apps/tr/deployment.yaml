@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tr
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: tr
+  template:
+    metadata:
+      labels:
+        app: tr
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: tr
+          image: ghcr.io/toraora/tr:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8787
+              name: http
+          env:
+            # Cloudflare fronts this host and rewrites cf-connecting-ip on every
+            # request; x-forwarded-for's leftmost entry is client-supplied.
+            - name: CLIENT_IP_HEADER
+              value: cf-connecting-ip
+            - name: RETENTION_DAYS
+              value: "365"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: tr-db
+                  key: url
+          envFrom:
+            # ADMIN_TOKEN, SECRET, and optional IP_HASH_SALT.
+            - secretRef:
+                name: tr-env
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi

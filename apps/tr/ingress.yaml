@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tr
+  annotations:
+    cert-manager.io/issuer: letsencrypt-dns
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [tr.tora.dev]
+      secretName: tr-tls
+  rules:
+    - host: tr.tora.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tr
+                port:
+                  name: http

@@ -10,3 +10,4 @@ resources:
   - apps/passport
   - apps/webview
   - apps/the-commons
+  - apps/tr
