@@ -1,0 +1,17 @@
+# Separate issuer: the shared cloudflare-dns-token has no zone for tora.dev.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-dns-tora
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: imanasianninja@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-dns-tora-account
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-dns-token-tora
+              key: token
