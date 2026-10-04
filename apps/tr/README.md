@@ -6,7 +6,7 @@ namespaced `letsencrypt-dns` Issuer, so the `cloudflare-dns-token` Secret must b
 `_acme-challenge.tr.tora.dev` in the `tora.dev` zone.
 
 Fastify collector on Postgres (`tr-db` StatefulSet, 10Gi RWO). Ingest is `POST /status`
-(`/tr/collect` also accepted); the dashboard is `/admin?token=…` and the JSON APIs under
+(`/tr/collect` also accepted); the dashboard is `/admin` (sign in with `ADMIN_TOKEN`; httpOnly cookie session) and the JSON APIs under
 `/admin/api/*` take an `x-admin-token` header. Health: `GET /health` → `{"ok":true}`.
 The collector creates its own schema on startup; there is no migration step.
 
