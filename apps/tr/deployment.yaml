@@ -27,10 +27,10 @@ spec:
             - containerPort: 8787
               name: http
           env:
-            # Cloudflare fronts this host and rewrites cf-connecting-ip on every
-            # request; x-forwarded-for's leftmost entry is client-supplied.
+            # Properties proxy /status to this host and set x-tr-client-ip to the
+            # real client address (Cloudflare's cf-connecting-ip would be the proxy).
             - name: CLIENT_IP_HEADER
-              value: cf-connecting-ip
+              value: x-tr-client-ip
             - name: RETENTION_DAYS
               value: "365"
             - name: DATABASE_URL
@@ -38,10 +38,25 @@ spec:
                 secretKeyRef:
                   name: tr-db
                   key: url
-          envFrom:
-            # ADMIN_TOKEN, SECRET, and optional IP_HASH_SALT.
-            - secretRef:
-                name: tr-env
+            # Keys wired from the out-of-band tr-env Secret; toggling one is a diff here.
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tr-env
+                  key: ADMIN_TOKEN
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: tr-env
+                  key: SECRET
+            # IPs are stored raw. Re-enable hashing by adding the key to tr-env and
+            # setting optional: false.
+            - name: IP_HASH_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: tr-env
+                  key: IP_HASH_SALT
+                  optional: true
           readinessProbe:
             httpGet:
               path: /health

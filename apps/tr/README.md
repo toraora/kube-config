@@ -11,8 +11,9 @@ Fastify collector on Postgres (`tr-db` StatefulSet, 10Gi RWO). Ingest is `POST /
 The collector creates its own schema on startup; there is no migration step.
 
 Each property reverse-proxies `POST /status` from its own origin to this host and injects
-`X-Tr-Site: <site>` (authoritative site id). `CLIENT_IP_HEADER=cf-connecting-ip` is set because
-Cloudflare fronts the host.
+`X-Tr-Site: <site>` (authoritative site id) plus `X-Tr-Client-Ip: <client ip>`;
+`CLIENT_IP_HEADER=x-tr-client-ip` reads that (Cloudflare's `cf-connecting-ip` here would only be
+the proxying property's address).
 
 ## Secrets (created out-of-band)
 
