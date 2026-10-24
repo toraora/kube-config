@@ -22,8 +22,9 @@ Cloudflare fronts the host.
 
     kubectl create secret generic tr-env -n toraora \
       --from-literal=ADMIN_TOKEN='<admin-token>' \
-      --from-literal=SECRET='<root-secret>' \
-      --from-literal=IP_HASH_SALT='<salt>'      # optional: store hashed IPs instead of raw
+      --from-literal=SECRET='<root-secret>'
+
+IPs are stored raw (no `IP_HASH_SALT`) so cross-property matching can use them directly.
 
 `SECRET` derives both the client `payloadKey` (`SECRET=… npx tr-mint --payload-key`) and the
 honeypot token HMAC key, so rotating it invalidates existing `?k=` links.
