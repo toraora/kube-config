@@ -1,6 +1,6 @@
 # tr (browser fingerprint collector)
 
-Image: `ghcr.io/toraora/tr:latest`, published by that repo's `image` workflow on every push to
+Image: `ghcr.io/hummus-2/tr:latest`, published by that repo's `image` workflow on every push to
 `main` (pulled with the shared `ghcr` Secret). Host: https://tr.tora.dev — TLS via the
 namespaced `letsencrypt-dns` Issuer, so the `cloudflare-dns-token` Secret must be able to write
 `_acme-challenge.tr.tora.dev` in the `tora.dev` zone.
