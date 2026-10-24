@@ -43,6 +43,8 @@ spec:
           env:
             - name: PUBLIC_URL
               value: https://passport.sfbanorcalarml.org
+            - name: TR_SITE_ID
+              value: passport.sfbanorcalarml.org
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
