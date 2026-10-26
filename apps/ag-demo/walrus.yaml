@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag-demo-walrus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ag-demo-walrus
+  template:
+    metadata:
+      labels:
+        app: ag-demo-walrus
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: walrus
+          image: ghcr.io/atomicgrader/walrus:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GRAPHQL_URL
+              value: http://ag-demo-otter/graphql
+          resources:
+            requests:
+              cpu: 50m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag-demo-walrus
+spec:
+  selector:
+    app: ag-demo-walrus
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
