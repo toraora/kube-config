@@ -1,0 +1,58 @@
+# Shared media/static/golden volume (otter writes, nginx serves /media and /static).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ag-demo-assets
+spec:
+  storageClassName: cephfs-nvme-retain
+  accessModes: ["ReadWriteMany"]
+  resources:
+    requests:
+      storage: 16Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag-demo-assets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ag-demo-assets
+  template:
+    metadata:
+      labels:
+        app: ag-demo-assets
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine-slim
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - name: assets
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: ag-demo-assets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag-demo-assets
+spec:
+  selector:
+    app: ag-demo-assets
+  ports:
+    - port: 80
+      targetPort: http
+      name: http

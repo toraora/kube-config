@@ -1,0 +1,53 @@
+# Same path split as prod (kube-manifests/kubernetes/atomicgrader/ingress.nix) plus /demo.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ag-demo
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [demo.atomicgrader.com]
+      secretName: ag-demo-tls
+  rules:
+    - host: demo.atomicgrader.com
+      http:
+        paths:
+          - path: /graphql
+            pathType: Prefix
+            backend: &otter
+              service:
+                name: ag-demo-otter
+                port:
+                  name: http
+          - path: /auth
+            pathType: Prefix
+            backend: *otter
+          - path: /api/exam
+            pathType: Prefix
+            backend: *otter
+          - path: /admin
+            pathType: Prefix
+            backend: *otter
+          - path: /demo
+            pathType: Prefix
+            backend: *otter
+          - path: /media
+            pathType: Prefix
+            backend: &assets
+              service:
+                name: ag-demo-assets
+                port:
+                  name: http
+          - path: /static
+            pathType: Prefix
+            backend: *assets
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ag-demo-walrus
+                port:
+                  name: http

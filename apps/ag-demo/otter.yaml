@@ -1,0 +1,256 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ag-demo-otter
+data:
+  DJANGO_SETTINGS_MODULE: config.settings.prod
+  DJANGO_DEBUG: "False"
+  DJANGO_MEDIA_ROOT: /assets/media/
+  DJANGO_STATIC_ROOT: /assets/static/
+  # Mounts /demo (per-org golden fixture reset); fixtures live at /assets/golden/<name>/.
+  DJANGO_DEMO_GOLDEN_DIR: /assets/golden
+  DJANGO_ADMIN_URL: admin
+  DJANGO_ADMIN_NAME: Nathan Wong
+  DJANGO_ADMIN_EMAIL: imanasianninja@gmail.com
+  # 127.0.0.1 in ALLOWED_HOSTS keeps prod.py from enabling Sentry for the demo.
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,demo.atomicgrader.com,ag-demo-otter
+  DJANGO_CSRF_TRUSTED_ORIGINS: https://demo.atomicgrader.com
+  DJANGO_FRONTEND_BASE_URL: https://demo.atomicgrader.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ag-demo-otter
+spec:
+  selector:
+    app: ag-demo-otter
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag-demo-otter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ag-demo-otter
+  template:
+    metadata:
+      labels:
+        app: ag-demo-otter
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: ag-demo-assets
+      initContainers:
+        - name: migrate
+          image: ghcr.io/atomicgrader/otter:latest
+          imagePullPolicy: Always
+          command: ["python", "manage.py", "migrate"]
+          envFrom: &envFrom
+            - configMapRef:
+                name: ag-demo-otter
+            - secretRef:
+                name: ag-demo-otter
+          env: &env
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-db
+                  key: password
+            - name: DJANGO_DATABASE_URL
+              value: postgres://atomicgrader:$(DB_PASS)@ag-demo-db:5432/atomicgrader
+            - name: RMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: username
+            - name: RMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: password
+            - name: RABBITMQ_BROKER_URL
+              value: amqp://$(RMQ_USER):$(RMQ_PASS)@ag-demo-rabbitmq:5672/
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_ID
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
+          volumeMounts: &mounts
+            - name: assets
+              mountPath: /assets
+        - name: collectstatic
+          image: ghcr.io/atomicgrader/otter:latest
+          command: ["python", "manage.py", "collectstatic", "--no-input"]
+          envFrom: *envFrom
+          env: *env
+          volumeMounts: *mounts
+      containers:
+        - name: otter
+          image: ghcr.io/atomicgrader/otter:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom: *envFrom
+          env: *env
+          volumeMounts: *mounts
+          resources:
+            requests:
+              cpu: 50m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag-demo-otter-process-cpu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ag-demo-otter-process-cpu
+  template:
+    metadata:
+      labels:
+        app: ag-demo-otter-process-cpu
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: ag-demo-assets
+      containers:
+        - name: worker
+          image: ghcr.io/atomicgrader/otter:latest
+          imagePullPolicy: Always
+          command: ["celery", "-A", "config", "worker", "-l", "info", "-Q", "image_processing", "--concurrency", "1"]
+          envFrom:
+            - configMapRef:
+                name: ag-demo-otter
+            - secretRef:
+                name: ag-demo-otter
+          env:
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-db
+                  key: password
+            - name: DJANGO_DATABASE_URL
+              value: postgres://atomicgrader:$(DB_PASS)@ag-demo-db:5432/atomicgrader
+            - name: RMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: username
+            - name: RMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: password
+            - name: RABBITMQ_BROKER_URL
+              value: amqp://$(RMQ_USER):$(RMQ_PASS)@ag-demo-rabbitmq:5672/
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_ID
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
+          volumeMounts:
+            - name: assets
+              mountPath: /assets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ag-demo-otter-process-gemini
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ag-demo-otter-process-gemini
+  template:
+    metadata:
+      labels:
+        app: ag-demo-otter-process-gemini
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: ag-demo-assets
+      containers:
+        - name: worker
+          image: ghcr.io/atomicgrader/otter:latest
+          imagePullPolicy: Always
+          command: ["celery", "-A", "config", "worker", "-l", "info", "-Q", "gemini", "--pool", "threads", "--concurrency", "16"]
+          envFrom:
+            - configMapRef:
+                name: ag-demo-otter
+            - secretRef:
+                name: ag-demo-otter
+          env:
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-db
+                  key: password
+            - name: DJANGO_DATABASE_URL
+              value: postgres://atomicgrader:$(DB_PASS)@ag-demo-db:5432/atomicgrader
+            - name: RMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: username
+            - name: RMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-rabbitmq-default-user
+                  key: password
+            - name: RABBITMQ_BROKER_URL
+              value: amqp://$(RMQ_USER):$(RMQ_PASS)@ag-demo-rabbitmq:5672/
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_ID
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
+          volumeMounts:
+            - name: assets
+              mountPath: /assets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
