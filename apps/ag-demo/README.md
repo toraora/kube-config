@@ -14,6 +14,8 @@ kubectl -n toraora create secret generic ag-demo-otter \
   --from-literal=DJANGO_SECRET_KEY="$(openssl rand -hex 50)" \
   --from-literal=DJANGO_JWT_SIGNING_KEY="$(openssl rand -hex 50)" \
   --from-literal=GEMINI_API_KEY=...        # uploads on the demo bill this key
+  --from-literal=GOOGLE_OAUTH_CLIENT_ID=... \
+  --from-literal=GOOGLE_OAUTH_CLIENT_SECRET=...   # redirect URI: https://demo.atomicgrader.com/<google callback>
 ```
 
 `ag-demo-rabbitmq-default-user` is created by the RabbitMQ operator; `ghcr` is the

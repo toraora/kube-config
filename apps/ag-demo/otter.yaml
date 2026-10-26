@@ -79,6 +79,16 @@ spec:
                   key: password
             - name: RABBITMQ_BROKER_URL
               value: amqp://$(RMQ_USER):$(RMQ_PASS)@ag-demo-rabbitmq:5672/
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_ID
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ag-demo-otter
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
           volumeMounts: &mounts
             - name: assets
               mountPath: /assets
