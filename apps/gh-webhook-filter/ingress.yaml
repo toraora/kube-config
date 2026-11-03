@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gh-webhook-filter
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    # GitHub caps payloads at 25 MB; nginx's default 1m would 413 large pushes.
+    nginx.ingress.kubernetes.io/proxy-body-size: 25m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [hooks.berkeley.mt]
+      secretName: gh-webhook-filter-tls
+  rules:
+    - host: hooks.berkeley.mt
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gh-webhook-filter
+                port:
+                  name: http

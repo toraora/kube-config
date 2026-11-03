@@ -12,3 +12,4 @@ resources:
   - apps/the-commons
   - apps/tr
   - apps/ag-demo
+  - apps/gh-webhook-filter

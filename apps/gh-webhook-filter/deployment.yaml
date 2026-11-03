@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gh-webhook-filter
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: gh-webhook-filter
+  template:
+    metadata:
+      labels:
+        app: gh-webhook-filter
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: gh-webhook-filter
+          image: ghcr.io/hummus-2/gh-webhook-filter:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # Deliveries for these repos are acknowledged (200) and dropped;
+            # everything else is forwarded verbatim to UPSTREAM_URL.
+            - name: BLOCK_REPOS
+              value: berkeleymt/bmt-2026
+            - name: UPSTREAM_URL
+              valueFrom:
+                secretKeyRef:
+                  name: gh-webhook-filter
+                  key: UPSTREAM_URL
+            # Optional: set to the webhook's secret to 401 unsigned/forged deliveries.
+            - name: WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gh-webhook-filter
+                  key: WEBHOOK_SECRET
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
